@@ -98,14 +98,14 @@ stages:
     - offlineHarborVersion_sc=$(cat $pathMeta_Harbor_sc | jq -r .UpdatedAt)
 
   script:
-    - echo "######## Trivy Version of Online DB #################"
+    - echo "######## Trivy Version of Online DB "
     - echo $server_TrivyOnline - $onlineTrivyVersion
     - echo ""
-    - echo "######## Trivy - Harbor - Starix version of Offline DB #################"
+    - echo "######## Trivy - Harbor - Starix version of Offline DB "
     - echo "TrivySrv - $server_TrivyOffline_starix - $offlineTrivyVersion_starix"
     - echo "HarborSrv - $ip_Harbor_starix -  offlineHarborVersion_starix"
     - echo ""
-    - echo "######## Trivy - Harbor - SC version of Offline DB #################"
+    - echo "######## Trivy - Harbor - SC version of Offline DB "
     - echo "TrivySrv - $server_TrivyOffline_sc - $offlineTrivyVersion_sc"
     - echo "HarborSrv - $ip_Harbor_sc -  offlineHarborVersion_sc"
     - echo ""
