@@ -1,0 +1,140 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: never  
+    - when: always 
+
+
+image: hub.nexdev.net/base/python:3.10-alpine
+
+
+
+variables:
+
+  username_starix: $USERNAME_STARIX
+  password_starix: PASSWORD_STARIX
+
+  username_sc: $USERNAME_SC
+  password_sc: $PASSWORD_SC
+
+
+  # Information Trivy Online - 10.70.70.39
+  server_TrivyOnline: "http://10.70.70.39:1115"
+  ip_TrivyOnline: "10.70.70.39"
+  pathDB_TrivyOnline: "/root/trivy-redis/trivy-db"
+  pathMeta_TrivyOnline: "db/online/metadata.json"
+  user_TrivyOnline: $USERNAME
+  password_TrivyOnline: $PASSWORD
+
+
+  # Information Trivy - Harbor  Offline - Starix - 10.18.200.121
+  ### Trivy
+  server_TrivyOffline_starix: "http://10.18.200.160:1115"
+  ip_TrivyOffline_starix: "10.18.200.121"
+  pathDB_TrivyOffline_starix: "/var/www/gluster/nexprod/nexops/trivy-redis/trivy-db"
+  pathMeta_TrivyOffline_starix: "db/starix/offline/trivy/metadata.json"
+  ### Harbor
+  ip_Harbor_starix: "10.18.200.157"
+  pathDB_Harbor_starix: "/var/www/nexops/harbor/data/trivy-adapter/trivy/db"
+  pathMeta_Harbor_starix: "db/starix/offline/harbor/metadata.json"
+
+
+
+
+
+  # Information Trivy - Harbor Offline - SC - 10.10.50.26
+  ### Trivy
+  server_TrivyOffline_sc: "http://10.10.50.69:1116"
+  ip_TrivyOffline_sc: "10.10.50.26"
+  pathDB_TrivyOffline_sc: "/var/www/gluster/nexprod/nexops/trivy-redis/trivy-db"
+  pathMeta_TrivyOffline_sc: "db/sc/offline/trivy/metadata.json"
+  ### Harbor
+  ip_Harbor_sc: "10.10.50.33"
+  pathDB_Harbor_sc: "/var/www/nexops/harbor/data/trivy-adapter/trivy/db"
+  pathMeta_Harbor_sc: "db/sc/offline/harbor/metadata.json"
+
+
+
+
+
+
+
+stages:
+  - show_information_before_update
+  # - update_offline_db
+  # - show_information_after_update
+
+
+
+
+
+.get_information:
+  before_script:
+    - apk update && apk add openssh sshpass jq
+
+    # get DB Online Version
+    - sshpass -p $password_starix scp -o StrictHostKeyChecking=no  $username_starix@$ip_TrivyOnline:$pathDB_TrivyOnline/metadata.json $pathMeta_TrivyOnline
+    - onlineTrivyVersion=$(cat $pathMeta_TrivyOnline | jq -r .UpdatedAt)
+
+    ######### Starix
+    # get DB Offline Version Trivy - Harbor - Starix
+    ### Trivy
+    - sshpass -p $password_starix scp -o StrictHostKeyChecking=no  $username_starix@$ip_TrivyOffline_starix:$pathDB_TrivyOffline_starix/metadata.json $pathMeta_TrivyOffline_starix
+    - offlineTrivyVersion_starix=$(cat $pathMeta_TrivyOffline_starix | jq -r .UpdatedAt)
+
+    ### Harbor
+    - sshpass -p $password_starix scp -o StrictHostKeyChecking=no  $username_starix@$ip_Harbor_starix:$pathDB_Harbor_starix/metadata.json $pathMeta_Harbor_starix
+    - offlineHarborVersion_starix=$(cat $pathMeta_Harbor_starix | jq -r .UpdatedAt)
+
+
+    ######### SC
+    # get DB Offline Version Trivy - Harbor - SC
+    ### Trivy
+    - sshpass -p $password_sc scp -o StrictHostKeyChecking=no  $username_sc@$ip_TrivyOffline_sc:$pathDB_TrivyOffline_sc/metadata.json $pathMeta_TrivyOffline_sc
+    - offlineTrivyVersion_sc=$(cat $pathMeta_TrivyOffline_sc | jq -r .UpdatedAt)
+
+    ### Harbor
+    - sshpass -p $password_sc scp -o StrictHostKeyChecking=no  $username_sc@$ip_Harbor_sc:$pathDB_Harbor_sc/metadata.json $pathMeta_Harbor_sc
+    - offlineHarborVersion_sc=$(cat $pathMeta_Harbor_sc | jq -r .UpdatedAt)
+
+  script:
+    - echo "######## Trivy Version of Online DB #################"
+    - echo $server_TrivyOnline - $onlineTrivyVersion
+    - echo ""
+    - echo "######## Trivy - Harbor - Starix version of Offline DB #################"
+    - echo "TrivySrv - $server_TrivyOffline_starix - $offlineTrivyVersion_starix"
+    - echo "HarborSrv - $ip_Harbor_starix -  offlineHarborVersion_starix"
+    - echo ""
+    - echo "######## Trivy - Harbor - SC version of Offline DB #################"
+    - echo "TrivySrv - $server_TrivyOffline_sc - $offlineTrivyVersion_sc"
+    - echo "HarborSrv - $ip_Harbor_sc -  offlineHarborVersion_sc"
+    - echo ""
+  tags:
+    - docker
+
+
+# .update_offline_db:
+#   script:
+#     - echo "update offline db ne"
+#     - sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no nchuong@$trivyOfflineSrv \
+#       sshpass -p $SSH_PASS scp -r -o StrictHostKeyChecking=no nchuong@$trivyOnlineSrv:$pathDBOnline/* $pathDBOffline/
+#   tags:
+#     - docker
+
+
+
+showDBInfo_before:
+  stage: show_information_before_update
+  extends: .get_information
+
+# updateTrivyDB:
+#   stage: update_offline_db
+#   extends: .update_offline_db
+
+# showDBInfo_after:
+#   stage: show_information_after_update
+#   extends: .get_information
+
+
+
+
