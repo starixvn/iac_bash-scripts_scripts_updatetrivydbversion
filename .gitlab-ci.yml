@@ -12,7 +12,7 @@ image: hub.nexdev.net/base/python:3.10-alpine
 variables:
 
   username_starix: $USERNAME_STARIX
-  password_starix: PASSWORD_STARIX
+  password_starix: $PASSWORD_STARIX
 
   username_sc: $USERNAME_SC
   password_sc: $PASSWORD_SC
