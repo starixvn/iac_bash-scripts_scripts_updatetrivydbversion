@@ -46,7 +46,7 @@ variables:
   ### Trivy
   server_TrivyOffline_sc: "http://10.10.50.69:1116"
   ip_TrivyOffline_sc: "10.10.50.26"
-  pathDB_TrivyOffline_sc: "/var/www/gluster/nexprod/nexops/trivy-redis/trivy-db"
+  pathDB_TrivyOffline_sc: "/var/www/gluster/nexops/trivy-redis/trivy-db"
   pathMeta_TrivyOffline_sc: "db/sc/offline/trivy/metadata.json"
   ### Harbor
   ip_Harbor_sc: "10.10.50.33"
